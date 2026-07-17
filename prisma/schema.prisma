@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum EditorType {
+  EXCALIDRAW
+}
+
+model Notebook {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sections   Section[]
+
+  @@index([userId])
+}
+
+model Section {
+  id         String   @id @default(uuid())
+  notebookId String
+  title      String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+  pages      Page[]
+
+  @@index([notebookId])
+}
+
+model Page {
+  id           String     @id @default(uuid())
+  sectionId    String
+  title        String     @default("Untitled")
+  editorType   EditorType @default(EXCALIDRAW)
+  canvasJson   Json?
+  thumbnailUrl String?
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  section      Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+}
